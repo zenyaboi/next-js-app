@@ -1,23 +1,6 @@
-import MeetupList from "../components/meetups/MeetupList";
+import { MongoClient } from "mongodb";
 
-const DUMMY_MEETUPS = [
-  {
-    id: "m1",
-    title: "A First Meetup",
-    image:
-      "https://image.api.playstation.com/vulcan/img/rnd/202010/2614/O2Z66UWrZH8zcejxopwWxhGu.png",
-    address: "Some address",
-    description: "This is a first meetup!",
-  },
-  {
-    id: "m2",
-    title: "A Second Meetup",
-    image:
-      "https://image.api.playstation.com/vulcan/img/rnd/202010/2614/O2Z66UWrZH8zcejxopwWxhGu.png",
-    address: "Some address",
-    description: "This is a second meetup!",
-  },
-];
+import MeetupList from "../components/meetups/MeetupList";
 
 function HomePage(props) {
   return <MeetupList meetups={props.meetups} />;
@@ -39,9 +22,26 @@ Since this project does not have data that changes every time, it's basically wo
 because it's useful depending on what projet you are developing  <---- */
 
 export async function getStaticProps() {
+  const client = await MongoClient.connect(
+    "mongodb+srv://zenya:Edi050595@cluster0.4dplr.mongodb.net/meetups?retryWrites=true&w=majority"
+  );
+  const db = client.db();
+
+  const meetupsCollection = db.collection("meetups");
+
+  const meetups = await meetupsCollection.find().toArray();
+
+  client.close();
+
   return {
     props: {
-      meetups: DUMMY_MEETUPS,
+      meetups: meetups.map((meetup) => ({
+        title: meetup.title,
+        address: meetup.address,
+        image: meetup.image,
+        description: meetup.description,
+        id: meetup._id.toString(),
+      })),
     },
     revalidate: 1,
   };
